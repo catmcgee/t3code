@@ -105,10 +105,10 @@ describe("theme files", () => {
 
   it("keeps the stock sidebar and chat on distinct surfaces in both appearances", () => {
     expectThemeColors(getStandardThemeColors("light"), {
-      canvas: "#fcfcfc",
-      sidebar: "#fafafa",
+      canvas: "#fbfafd",
+      sidebar: "#f4f2fc",
       sidebarRowActive: "#ffffff",
-      messageSurface: "#f4f4f5",
+      messageSurface: "#ede9ff",
     });
     expectThemeColors(getStandardThemeColors("dark"), {
       canvas: "#0a0a0a",

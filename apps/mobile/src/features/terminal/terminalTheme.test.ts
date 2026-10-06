@@ -8,10 +8,10 @@ import { buildGhosttyThemeConfig, getMobileTerminalTheme } from "./terminalTheme
 describe("getMobileTerminalTheme", () => {
   it("uses the shared default light terminal colors", () => {
     expect(getMobileTerminalTheme("t3-code", "light")).toMatchObject({
-      background: "#fcfcfc",
-      foreground: "#27272a",
-      cursorForeground: "#26384e",
-      cursorBackground: "#fcfcfc",
+      background: "#fbfafd",
+      foreground: "#252437",
+      cursorForeground: "#694ce6",
+      cursorBackground: "#fbfafd",
     });
   });
 

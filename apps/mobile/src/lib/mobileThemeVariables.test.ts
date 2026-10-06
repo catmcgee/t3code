@@ -55,7 +55,7 @@ describe("mobile theme runtime variables", () => {
       for (const appearance of ["light", "dark"] as const) {
         const variables = getMobileThemeRuntimeVariables(themeId, appearance, "android");
         expect(variables["--color-header"]).toBe(
-          appearance === "light" ? "rgba(244, 244, 245, 1)" : "rgba(20, 20, 20, 1)",
+          appearance === "light" ? "rgba(240, 238, 252, 1)" : "rgba(20, 20, 20, 1)",
         );
         for (const pane of ["--color-screen", "--color-sheet-solid", "--color-drawer"] as const) {
           expect(variables["--color-header"]).not.toBe(themeColorWithAlpha(variables[pane], 1));
