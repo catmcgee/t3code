@@ -1158,7 +1158,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
   --sidebar-control-surface: oklch(0.94 0.022 295);
   --sidebar-row-hover: oklch(0.982 0.008 295);
   --sidebar-row-active: var(--color-white);
-  --sidebar-row-selected: var(--color-white);
+  --sidebar-row-selected: oklch(0.95 0.028 285);
   --sidebar-border: var(--border);
   --sidebar-stage-fade: var(--sidebar);
   --code-background: oklch(0.982 0.006 295);
@@ -1224,7 +1224,6 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
     --markdown-code-border: var(--contrast-border);
     --markdown-quote-rule: linear-gradient(var(--contrast-border), var(--contrast-border));
     --markdown-marker: currentcolor;
-    --text-selection: color-mix(in srgb, var(--primary) 30%, transparent);
   }
 }
 
@@ -1248,7 +1247,7 @@ html[data-mobile-composer-route-transition="true"]::view-transition-old(t3-mobil
   --sidebar-control-surface: oklch(0.94 0.022 295);
   --sidebar-row-hover: oklch(0.982 0.008 295);
   --sidebar-row-active: var(--color-white);
-  --sidebar-row-selected: var(--color-white);
+  --sidebar-row-selected: oklch(0.95 0.028 285);
   --sidebar-border: var(--prism-line);
   --sidebar-stage-fade: var(--sidebar);
 
@@ -1352,7 +1351,14 @@ html[data-theme-id]:not([data-theme-id=""]) {
   --markdown-code-border: var(--contrast-border);
   --markdown-quote-rule: linear-gradient(var(--contrast-border), var(--contrast-border));
   --markdown-marker: currentcolor;
-  --text-selection: color-mix(in srgb, var(--primary) 24%, transparent);
+  /* Info, success, and scrollbars are not theme roles; keep the stock values
+     installed themes were designed against rather than the Prism defaults. */
+  --info: var(--color-blue-500);
+  --info-foreground: light-dark(var(--color-blue-700), var(--color-blue-400));
+  --success: var(--color-emerald-500);
+  --success-foreground: light-dark(var(--color-emerald-700), var(--color-emerald-400));
+  --app-scrollbar-thumb: light-dark(rgb(217 217 217), rgb(255 255 255 / 8%));
+  --app-scrollbar-thumb-hover: light-dark(rgb(191 191 191), rgb(255 255 255 / 12%));
 }
 
 /* Theme-token dependency probes are restored synchronously, before paint. Keep
@@ -1743,8 +1749,12 @@ code {
   font-family: var(--font-mono);
 }
 
-::selection {
-  background-color: var(--text-selection);
+/* Prism light only; dark mode and installed themes keep the browser default,
+   and selection: utilities still win from the utilities layer. */
+@layer base {
+  html:not(.dark):not([data-theme-id]) ::selection {
+    background-color: var(--text-selection);
+  }
 }
 
 /* Code blocks in chat carry the size preference. Scoped to chat markdown

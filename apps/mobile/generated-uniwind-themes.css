@@ -7,7 +7,7 @@
       --color-sheet-solid: #fbfafd;
       --color-card: #ffffff;
       --color-grouped-card: #f0eefc;
-      --color-card-alt: #fcfbfd;
+      --color-card-alt: #fcfbfe;
       --color-card-translucent: rgba(255, 255, 255, 0.8);
       --color-thread-canvas: #fbfafd;
       --color-thread-selected: #ffffff;
@@ -42,10 +42,10 @@
       --color-switch-active-thumb: #ffffff;
       --color-switch-inactive-track: #f5f5fb;
       --color-switch-inactive-thumb: #67677a;
-      --color-warning: #faf1e7;
+      --color-warning: #fbf1e7;
       --color-warning-border: rgba(244, 159, 30, 0.32);
       --color-warning-foreground: #ac5107;
-      --color-danger: #faeaef;
+      --color-danger: #faebf0;
       --color-danger-border: rgba(241, 54, 84, 0.32);
       --color-danger-foreground: #b61537;
       --color-update: #f6e7f6;
