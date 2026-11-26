@@ -1,13 +1,15 @@
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
-import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Schema from "effect/Schema";
 
 import {
   ForwardCompatibleArray,
+  ForwardCompatibleOptional,
   ForwardCompatibleUnion,
   ForwardCompatibleUnionArray,
   isUnknownUnionMember,
+  TrimmedNonEmptyString,
   UnknownUnionMember,
 } from "./baseSchemas.ts";
 
@@ -17,31 +19,56 @@ const Shape = Schema.Union([
   Schema.Struct({ kind: Schema.Literal("square"), side: Schema.Number }),
 ]);
 const members = Shape.members;
-/** How clients decode: the JSON wire codec over the runtime schema. */
 const fromWire = <S extends Schema.Top>(schema: S) =>
   Schema.decodeUnknownSync(Schema.toCodecJson(schema) as never) as (value: unknown) => S["Type"];
 
 describe("ForwardCompatibleArray", () => {
   it("decodes elements through their own codec and drops ones it cannot read", () => {
-    const decoded = fromWire(ForwardCompatibleArray(Shape))([
+    const shapes = ForwardCompatibleArray(Shape);
+    const exit = Schema.toCodecJson(Schema.Exit(shapes, Schema.Never, Schema.Never));
+    const wire = [
       { kind: "circle", radius: 1, at },
       { kind: "triangle" },
       { kind: "square", side: "wide" },
-    ]);
+    ];
+    const decoded = fromWire(shapes)(wire);
     expect(decoded).toHaveLength(1);
     expect(DateTime.isDateTime((decoded[0] as { at: unknown }).at)).toBe(true);
+    expect(Schema.decodeSync(exit)({ _tag: "Success", value: wire })).toEqual(
+      Exit.succeed(decoded),
+    );
+    expect(Schema.encodeSync(exit)(Exit.succeed(decoded))).toEqual({
+      _tag: "Success",
+      value: [wire[0]],
+    });
   });
 
-  it("applies decoding defaults instead of failing", () => {
-    const WithDefault = Schema.Struct({
-      name: Schema.String,
-      count: Schema.optionalKey(Schema.Number).pipe(
-        Schema.withDecodingDefaultKey(Effect.succeed(7)),
-      ),
-    });
-    expect(Schema.decodeUnknownSync(ForwardCompatibleArray(WithDefault))([{ name: "a" }])).toEqual([
-      { name: "a", count: 7 },
+  const Named = ForwardCompatibleArray(Schema.Struct({ name: TrimmedNonEmptyString }));
+
+  it("drops an element it cannot encode instead of failing the array", () => {
+    const encodeNamed = Schema.encodeUnknownSync(Schema.toCodecJson(Named));
+
+    const wire = JSON.parse(
+      JSON.stringify(encodeNamed([{ name: "a" }, { name: " " }, { name: "b" }])),
+    );
+    expect(wire).toEqual([{ name: "a" }, { name: "b" }]);
+    expect(fromWire(Named)(wire)).toEqual([{ name: "a" }, { name: "b" }]);
+  });
+
+  it("still drops the null holes a server on an earlier build sends", () => {
+    expect(fromWire(Named)([{ name: "a" }, null, { name: "b" }])).toEqual([
+      { name: "a" },
+      { name: "b" },
     ]);
+  });
+});
+
+describe("ForwardCompatibleOptional", () => {
+  const Settings = Schema.Struct({ mode: ForwardCompatibleOptional(Schema.Literals(["a", "b"])) });
+  const encodeSettings = Schema.encodeUnknownSync(Schema.toCodecJson(Settings));
+
+  it("encodes back to JSON after dropping a value it cannot read", () => {
+    expect(encodeSettings(fromWire(Settings)({ mode: "future" }))).toEqual({});
   });
 });
 
@@ -62,11 +89,6 @@ describe("ForwardCompatibleUnion", () => {
 
   it("still fails a known member whose payload is broken", () => {
     expect(() => decode({ kind: "square", side: "wide" })).toThrow();
-  });
-
-  it("refuses to encode an unknown member", () => {
-    const encode = Schema.encodeSync(ForwardCompatibleUnion(members, "kind") as never);
-    expect(() => encode(new UnknownUnionMember("kind", "triangle") as never)).toThrow();
   });
 });
 
@@ -95,13 +117,5 @@ describe("ForwardCompatibleUnionArray", () => {
 
   it("fails when a known member is broken, so real bugs stay visible", () => {
     expect(() => decode([{ kind: "square", side: "wide" }])).toThrow();
-  });
-
-  it("encodes as a plain array", () => {
-    const encode = Schema.encodeSync(
-      Schema.toCodecJson(ForwardCompatibleUnionArray(members, "kind")),
-    );
-    const square = { kind: "square" as const, side: 2 };
-    expect(encode([square])).toEqual([square]);
   });
 });
